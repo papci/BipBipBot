@@ -38,6 +38,7 @@ namespace BipBipBot
                 var client =new IrcClient(settings);
                 
                 await client.ConnectAsync();
+                client.SocketClient.OnReceived += SocketClientOnOnReceived;
                 foreach (ChannelConfiguration channelConfiguration in serverConfiguration.ChannelConfigurations)
                 {
                     await client.JoinChannelAsync(channelConfiguration.ChannelName);
@@ -51,6 +52,11 @@ namespace BipBipBot
                 TryCancel();
                 await Task.Delay(1000);
             }
+        }
+
+        private void SocketClientOnOnReceived(object sender, SocketsArgs e)
+        {
+            _logger.Log(LogLevel.Trace, e.EventText);
         }
 
         private void TryCancel()
