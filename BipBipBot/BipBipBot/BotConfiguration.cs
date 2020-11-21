@@ -4,12 +4,13 @@ namespace BipBipBot
 {
     public class BotConfiguration
     {
-        public List<ServerConfiguration> ChannelConfigurations { get; set; }
+        public List<ServerConfiguration> ServerConfigurations { get; set; }
     }
 
     public class ServerConfiguration
     {
         public string BotName { get; set; }
+        public string AltName { get; set; }
         public string Host { get; set; }
         public int Port { get; set; }
         public List<ChannelConfiguration> ChannelConfigurations { get; set; }
