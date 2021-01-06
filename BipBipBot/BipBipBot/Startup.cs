@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using IrcNetLib.Core;
+using BipBipBot.DataEngine;
+using IrcDotNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,57 +17,99 @@ namespace BipBipBot
     {
         protected BotConfiguration _botConfiguration;
         protected ConcurrentDictionary<ServerConfiguration, IrcClient> Clients;
-        protected ILogger<Startup> _logger;
         protected CancellationTokenSource _cancellationTokenSource;
+        protected ServiceProvider ServiceProvider;
+
         public Startup(IConfigurationRoot configuration, IServiceCollection serviceProvider)
         {
             this.Clients = new ConcurrentDictionary<ServerConfiguration, IrcClient>();
             this._cancellationTokenSource = new CancellationTokenSource();
             _botConfiguration = configuration.Get<BotConfiguration>();
-      
+            ServiceProvider = serviceProvider.BuildServiceProvider();
         }
 
         public async Task RunAsync()
         {
             foreach (ServerConfiguration serverConfiguration in _botConfiguration.ServerConfigurations)
             {
-                var settings = new IrcClientSettings()
-                {
-                    Nickname = serverConfiguration.BotName,
-                    AltNickname = serverConfiguration.AltName,
-                    HostName = serverConfiguration.Host,
-                    Port = serverConfiguration.Port
-                };
-                var client =new IrcClient(settings);
-                
-                await client.ConnectAsync();
-                client.SocketClient.OnReceived += SocketClientOnOnReceived;
-                foreach (ChannelConfiguration channelConfiguration in serverConfiguration.ChannelConfigurations)
-                {
-                    await client.JoinChannelAsync(channelConfiguration.ChannelName);
-                }
+                var client = new ExtendedIrcClient(serverConfiguration);
+
+                client.Connected += ClientOnConnected;
+                client.Registered += ClientOnRegistered;
+                client.RawMessageReceived += ClientOnRawMessageReceived;
+              
+                client.OnIrcEvent.Subscribe(OnNextIrcEvent);
+                client.OnPrivateMessage.Subscribe(OnNextPrivateMessageEvent);
+                client.ConnectAsync();
+
                 Clients.TryAdd(serverConfiguration, client);
             }
 
+            await Task.Delay(1000);
+
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
-
+                await KeepChannelsAsync();
                 TryCancel();
+
                 await Task.Delay(1000);
             }
         }
 
-        private void SocketClientOnOnReceived(object sender, SocketsArgs e)
+        private void OnNextPrivateMessageEvent(PrivateMessageEvent obj)
         {
-            _logger.Log(LogLevel.Trace, e.EventText);
+           Log(Json(obj), LogLevel.Information );
+           
         }
+
+        private string Json(object privateMessageEvent)
+        {
+            return JsonSerializer.Serialize(privateMessageEvent, privateMessageEvent.GetType());
+        }
+
+
+        private void OnNextIrcEvent(IrcEvent obj)
+        {
+            Log(Json(obj), LogLevel.Information );
+        }
+
+        private void ClientOnRawMessageReceived(object? sender, IrcRawMessageEventArgs e)
+        {
+  
+        }
+
+        private void ClientOnRegistered(object? sender, EventArgs e)
+        {
+            var client = sender as ExtendedIrcClient;
+            client?.JoinChannels();
+            Debug.WriteLine("Client registered");
+        }
+
+        private void ClientOnConnected(object? sender, EventArgs e)
+        {
+            Debug.WriteLine("Client connected");
+        }
+
+        private async Task KeepChannelsAsync()
+        {
+        }
+
 
         private void TryCancel()
         {
-            bool shouldCancel = Clients.All(pair => !pair.Value.Connected);
+            bool shouldCancel = Clients.All(pair => !pair.Value.IsConnected);
             if (shouldCancel)
             {
                 _cancellationTokenSource.Cancel();
+            }
+        }
+
+        private void Log(string message, LogLevel level)
+        {
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var logger = scope.ServiceProvider.GetService<ILogger<Startup>>();
+                logger.Log(level, message);
             }
         }
     }

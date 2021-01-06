@@ -1,5 +1,6 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using IrcNetLib.Core;
+using BipBipBot;
 using Xunit;
 
 namespace Bip.Tests.Lib
@@ -9,27 +10,27 @@ namespace Bip.Tests.Lib
         [Fact]
         public async Task TestConnection()
         {
-
-            IrcClientSettings settings = new IrcClientSettings()
+            ServerConfiguration settings = new ServerConfiguration()
             {
-                Nickname = "YapTestBot",
-                AltNickname = "TestBotYap",
-                HostName = "librenet.europnet.org",
+                BotName = "YapTestBot",
+                AltName = "TestBotYap",
+                Host = "librenet.europnet.org",
                 Port = 6667,
-                ServerPassword = string.Empty
-
+                ChannelConfigurations = new List<ChannelConfiguration>()
+                {
+                    new ChannelConfiguration() {ChannelName = "#lataix"}
+                }
             };
 
-            IrcClient ircClient = new IrcClient(settings);
+            ExtendedIrcClient ircClient = new ExtendedIrcClient(settings);
             await ircClient.ConnectAsync();
-            Assert.True(ircClient.Connected);
-        
-            await ircClient.JoinChannelAsync("#lataix");
-            await ircClient.SendMessageToAsync("#lataix", "Bip Bip !");
-            await ircClient.LeaveChannelAsync("#lataix");
+            Assert.True(ircClient.IsConnected);
+
+            ircClient.JoinChannels();
+            await ircClient.SendMessageAsync("#lataix", "Bip Bip !");
+     
             await ircClient.DisconnectAsync();
-            Assert.True(!ircClient.Connected);
-        
+            Assert.True(!ircClient.IsConnected);
         }
     }
 }
