@@ -1,7 +1,9 @@
-﻿namespace BipBipBot.DataEngine
+﻿using BipBip.Extensions.Abstractions;
+
+namespace BipBipBot.DataEngine
 {
-    public class IrcEvent
+    public class IrcEvent : IIrcEvent
     {
-        
+     
     }
 }

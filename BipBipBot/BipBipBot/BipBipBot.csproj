@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BipBip.Extensions.Abstractions" Version="1.0.0" />
+    <PackageReference Include="BipBip.Extensions.Abstractions" Version="1.0.5" />
     <PackageReference Include="IrcDotNet" Version="0.7.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />

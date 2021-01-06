@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="BipBip.Extensions.Abstractions" Version="1.0.0" />
+      <PackageReference Include="BipBip.Extensions.Abstractions" Version="1.0.5" />
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     </ItemGroup>
 

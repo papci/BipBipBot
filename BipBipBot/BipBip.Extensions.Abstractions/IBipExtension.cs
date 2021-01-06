@@ -5,6 +5,8 @@ namespace BipBip.Extensions.Abstractions
 {
   public interface IBipExtension
   {
+
+
       /// <summary>
       /// Triggered when a user join a channel
       /// </summary>

@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using BipBip.Extensions.Abstractions;
 using BipBipBot.DataEngine;
 using IrcDotNet;
 using Microsoft.Extensions.Configuration;
@@ -13,23 +17,26 @@ using Microsoft.Extensions.Logging;
 
 namespace BipBipBot
 {
-    public class Startup
+    public class BotMain
     {
         protected BotConfiguration _botConfiguration;
         protected ConcurrentDictionary<ServerConfiguration, IrcClient> Clients;
         protected CancellationTokenSource _cancellationTokenSource;
         protected ServiceProvider ServiceProvider;
-
-        public Startup(IConfigurationRoot configuration, IServiceCollection serviceProvider)
+        protected ExtensionsManager ExtensionsManager;
+        
+        public BotMain(IConfigurationRoot configuration, IServiceCollection serviceProvider)
         {
             this.Clients = new ConcurrentDictionary<ServerConfiguration, IrcClient>();
             this._cancellationTokenSource = new CancellationTokenSource();
             _botConfiguration = configuration.Get<BotConfiguration>();
             ServiceProvider = serviceProvider.BuildServiceProvider();
+            this.ExtensionsManager = new ExtensionsManager(ServiceProvider);
         }
 
         public async Task RunAsync()
         {
+            Log($"BipBipBot Started at {DateTime.UtcNow:f}", LogLevel.Information);
             foreach (ServerConfiguration serverConfiguration in _botConfiguration.ServerConfigurations)
             {
                 var client = new ExtendedIrcClient(serverConfiguration);
@@ -37,7 +44,7 @@ namespace BipBipBot
                 client.Connected += ClientOnConnected;
                 client.Registered += ClientOnRegistered;
                 client.RawMessageReceived += ClientOnRawMessageReceived;
-              
+
                 client.OnIrcEvent.Subscribe(OnNextIrcEvent);
                 client.OnPrivateMessage.Subscribe(OnNextPrivateMessageEvent);
                 client.ConnectAsync();
@@ -56,10 +63,11 @@ namespace BipBipBot
             }
         }
 
+        
+
         private void OnNextPrivateMessageEvent(PrivateMessageEvent obj)
         {
-           Log(Json(obj), LogLevel.Information );
-           
+            this.ExtensionsManager.ExecutePrivateMessageEvent(obj);
         }
 
         private string Json(object privateMessageEvent)
@@ -70,12 +78,11 @@ namespace BipBipBot
 
         private void OnNextIrcEvent(IrcEvent obj)
         {
-            Log(Json(obj), LogLevel.Information );
+         
         }
 
         private void ClientOnRawMessageReceived(object? sender, IrcRawMessageEventArgs e)
         {
-  
         }
 
         private void ClientOnRegistered(object? sender, EventArgs e)
@@ -108,7 +115,7 @@ namespace BipBipBot
         {
             using (var scope = ServiceProvider.CreateScope())
             {
-                var logger = scope.ServiceProvider.GetService<ILogger<Startup>>();
+                var logger = scope.ServiceProvider.GetService<ILogger<BotMain>>();
                 logger.Log(level, message);
             }
         }

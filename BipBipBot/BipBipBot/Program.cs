@@ -21,9 +21,9 @@ namespace BipBipBot
             var serviceProvider = new ServiceCollection()
                 .AddLogging(conf => conf.AddConsole());
             
-            Startup startup = new Startup(configuration, serviceProvider);
+            BotMain botMain = new BotMain(configuration, serviceProvider);
         
-            await startup.RunAsync();
+            await botMain.RunAsync();
         }
     }
 }

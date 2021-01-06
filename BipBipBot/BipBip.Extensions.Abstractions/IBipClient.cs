@@ -5,6 +5,7 @@ namespace BipBip.Extensions.Abstractions
 {
     public interface IBipClient
     {
+        
         Task ConnectAsync();
         Task DisconnectAsync();
 

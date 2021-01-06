@@ -2,6 +2,6 @@
 {
     public interface IIrcEvent
     {
-        
+         IBipClient BipClient { get; set; }
     }
 }
