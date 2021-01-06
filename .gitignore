@@ -253,4 +253,4 @@ paket-files/
 # CodeRush
 .cr/
 
-appsettings.json
+appsettings.json*

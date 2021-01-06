@@ -37,5 +37,17 @@ namespace BipBip.Extensions.Abstractions
       /// <param name="channel"></param>
       /// <returns></returns>
       Task OnChannelModdedAsync(string channel, ChannelChange change);
+
+      /// <summary>
+      /// Triggered when bot is connected and ready 
+      /// </summary>
+      /// <returns></returns>
+      Task OnConnectedAsync();
+
+      /// <summary>
+      /// Triggered when bot is disconnected from the server
+      /// </summary>
+      /// <returns></returns>
+      Task OnDisconnectedAsync();
   }
 }

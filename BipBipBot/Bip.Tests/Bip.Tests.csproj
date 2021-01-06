@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BipBipBot\BipBipBot.csproj" />
       <ProjectReference Include="..\IrcNetLib.Core\IrcNetLib.Core.csproj" />
     </ItemGroup>
 
